@@ -27,21 +27,11 @@ import { messageSchema } from "@/schemas/messageSchema";
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Access your API key as an environment variable (see "Set up your API key" above)
-
-const API_KEY = "AIzaSyB0eMPjJxnuJ_8LzNR02euqUvu6dge3nh0";
-const genAI = new GoogleGenerativeAI(API_KEY);
-
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
 const specialChar = "||";
 
 const parseStringMessages = (messageString: string): string[] => {
   return messageString.split(specialChar);
 };
-
-const initialMessageString =
-  "What's your favorite movie?||Do you have any pets?||What's your dream job?";
 
 export default function SendMessage() {
   const [initialMessage, setInitialMessage] = useState(
@@ -50,16 +40,6 @@ export default function SendMessage() {
 
   const params = useParams<{ username: string }>();
   const username = params.username;
-
-  const {
-    complete,
-    completion,
-    isLoading: isSuggestLoading,
-    error,
-  } = useCompletion({
-    api: "/api/suggest-messages",
-    initialCompletion: initialMessageString,
-  });
 
   const form = useForm<z.infer<typeof messageSchema>>({
     resolver: zodResolver(messageSchema),
@@ -99,31 +79,20 @@ export default function SendMessage() {
     }
   };
 
-  async function run() {
-    const prompt =
-      "Create a list of three open-ended and engaging questions formatted as a single string. Each question should be separated by '||'. These questions are for an anonymous social messaging platform, like Qooh.me, and should be suitable for a diverse audience. Avoid personal or sensitive topics, focusing instead on universal themes that encourage friendly interaction. For example, your output should be structured like this: 'What’s a hobby you’ve recently started?||If you could have dinner with any historical figure, who would it be?||What’s a simple thing that makes you happy?'. Ensure the questions are intriguing, foster curiosity, and contribute to a positive and welcoming conversational environment.";
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-
-    // Extract the text from the response
-    let text = response?.candidates[0]?.content?.parts[0]?.text;
-    // console.log(text)
-    setInitialMessage(text)
-    text = (JSON.parse(text));
-  }
+  const [error, setError] = useState("");
 
   const fetchSuggestedMessages = async () => {
     try {
-      await run();
-      // toast({
-      //   title: response.data.message,
-      //   variant: 'default',
-      // });
-    } catch (error) {
-      console.log("fetching...");
-      console.error("Error fetching messages:", error);
+      const response = await axios.post<ApiResponse>("/api/suggest-messages");
+      setInitialMessage(response.data.message);
+    } catch (err: any) {
+      setError(err);
+      console.error("Error fetching messages:", err);
       // Handle error appropriately
+      toast({
+        title: err,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -168,7 +137,7 @@ export default function SendMessage() {
 
       <div className="space-y-4 my-8">
         <div className="space-y-2">
-          <Button onClick={run} className="my-4" disabled={isSuggestLoading}>
+          <Button onClick={fetchSuggestedMessages} className="my-4" disabled={isLoading}>
             Suggest Messages
           </Button>
           <p>Click on any message below to select it.</p>
@@ -179,7 +148,7 @@ export default function SendMessage() {
           </CardHeader>
           <CardContent className="flex flex-col space-y-4">
             {error ? (
-              <p className="text-red-500">{error.message}</p>
+              <p className="text-red-500">{error}</p>
             ) : (
               parseStringMessages(initialMessage).map((message, index) => (
                 <Button
