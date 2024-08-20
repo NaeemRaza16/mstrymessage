@@ -36,7 +36,9 @@ export default function SignInForm() {
       identifier: data.identifier,
       password: data.password,
     });
-    console.log(result);
+    const error = result?.error?.split('/')[0];
+    const username = result?.error?.split('/')[1];
+    // console.log(result)
 
     if (result?.error) {
       if (result.error === 'CredentialsSignin') {
@@ -48,9 +50,10 @@ export default function SignInForm() {
       } else {
         toast({
           title: 'Error',
-          description: result.error,
+          description: error,
           variant: 'destructive',
         });
+        router.replace('/verify/'+username);
       }
     }
 

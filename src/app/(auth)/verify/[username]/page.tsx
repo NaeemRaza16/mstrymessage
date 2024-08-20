@@ -40,6 +40,7 @@ export default function VerifyAccount() {
       router.replace("/sign-in");
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
+      console.log(axiosError)
       toast({
         title: "Verification Failed",
         description:
@@ -47,6 +48,9 @@ export default function VerifyAccount() {
             "An error occurred. Please try again.",
         variant: "destructive",
         });
+      if (axiosError.response?.data.message === "Verification code has expired. Please sign up again to get a new code.") {
+        router.replace(`/sign-up`);
+      } 
     }
   };
 
