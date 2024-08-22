@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import ReactDOMServer from 'react-dom/server';
 import VerificationEmail from "../../emails/VerificationEmail";
 import { ApiResponse } from '@/types/ApiResponse';
 
@@ -10,30 +9,31 @@ export async function sendVerificationEmailUsingNodeMailer(
 ): Promise<ApiResponse> {
   try {
     // Create a transporter object using your email provider's SMTP server
-    let transporter = nodemailer.createTransport({
-      service: 'gmail', // Use your email provider's service, e.g., 'hotmail', 'yahoo', etc.
+    // console.log(username)
+    // console.log(verifyCode)
+    const transporter = nodemailer.createTransport({
+      // host: "smtp.ethereal.email", // Or use your real SMTP provider
+      service: 'gmail',
+      port: 465,
+      secure: true, // Use `true` for port 465, `false` for other ports
       auth: {
-        user: 'muhammadnaeemraza16@gmail.com', // Your Gmail address or email address of your choice
-        pass: 'Facethefire@2511', // Your Gmail password or App Password if 2FA is enabled
+        user: process.env.EMAIL_USER, // Use environment variables
+        pass: process.env.EMAIL_PASS, // Use environment variables
       },
     });
 
-    // Convert the JSX component to an HTML string
-    // const emailContent = ReactDOMServer.renderToString(
-    //   <VerificationEmail username={username} otp={verifyCode} />
-    // );
-
     // Construct the email options
     let mailOptions: any = {
-      from: 'muhammadnaeemraza16@gmail.com', // Sender's email address
+      from: process.env.EMAIL_USER, // Sender's email address
       to: email, // Recipient's email address
       subject: 'Mystery Message Verification Code',
-      html: VerificationEmail({ username, otp: verifyCode }), // Converted HTML string
+      // html:  VerificationEmail({ username, otp: verifyCode }), // Converted HTML string
+      text: `Hello ${username},\n\nThank you for registering. Please use the following verification code to complete your registration:\n\n${verifyCode}\n\nIf you did not request this code, please ignore this email.`,
     };
 
     // Send the email
     let info = await transporter.sendMail(mailOptions);
-    console.log('Email sent: ' + info.response);
+    // console.log('Email sent: ' + info.response);
 
     return { success: true, message: 'Verification email sent successfully.' };
   } catch (emailError) {
