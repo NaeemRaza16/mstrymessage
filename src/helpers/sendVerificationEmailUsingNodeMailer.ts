@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import VerificationEmail from "../../emails/VerificationEmail";
+// import VerificationEmail from "../../emails/VerificationEmail";
 import { ApiResponse } from '@/types/ApiResponse';
 
 export async function sendVerificationEmailUsingNodeMailer(
@@ -9,8 +9,9 @@ export async function sendVerificationEmailUsingNodeMailer(
 ): Promise<ApiResponse> {
   try {
     // Create a transporter object using your email provider's SMTP server
-    // console.log(username)
-    // console.log(verifyCode)
+    console.log(username)
+    console.log(verifyCode)
+    console.log(email)
     const transporter = nodemailer.createTransport({
       // host: "smtp.ethereal.email", // Or use your real SMTP provider
       service: 'gmail',
@@ -33,7 +34,7 @@ export async function sendVerificationEmailUsingNodeMailer(
 
     // Send the email
     let info = await transporter.sendMail(mailOptions);
-    // console.log('Email sent: ' + info.response);
+    console.log('Email sent: ' + info.response);
 
     return { success: true, message: 'Verification email sent successfully.' };
   } catch (emailError) {
